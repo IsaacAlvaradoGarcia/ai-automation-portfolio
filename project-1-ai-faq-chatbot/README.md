@@ -30,4 +30,4 @@ The workflow includes:
 ## Workflow Screenshot
 
 
-![Workflow](./screenshots/workflow.png)
+![Workflow](./screenshots/FAQSANDLEADS.png)
