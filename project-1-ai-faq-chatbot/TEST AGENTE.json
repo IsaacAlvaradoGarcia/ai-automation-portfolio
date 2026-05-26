@@ -1,0 +1,453 @@
+{
+  "name": "TEST AGENTE",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        656,
+        -48
+      ],
+      "id": "287ca027-ea25-44a4-b7f6-e1a148ec4a47",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -368,
+        64
+      ],
+      "id": "2b26d1fb-7a51-4204-a07c-958b03aab0f5",
+      "name": "When chat message received",
+      "webhookId": "5fad599d-23ce-4c6b-a9ca-317e4c2cd8c0"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres un asistente para un negocio de reparación de computadoras.\n\nTienes acceso a una hoja de Google Sheets con preguntas y respuestas frecuentes.\n\nCuando el usuario haga una pregunta:\n\n1. Busca palabras clave importantes como:\n\n* horario\n* servicios\n* llamada\n* ubicación\n* precios\n\n2. Usa Google Sheets para encontrar coincidencias.\n3. Responde usando únicamente la columna \"Respuestas\".\n\nSi no encuentras coincidencias responde:\n\"No encontré información sobre eso.\"\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        608,
+        -256
+      ],
+      "id": "f19bb9c4-ffd4-4f36-94a9-7b0a9cfe4b58",
+      "name": "chatbotweb"
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {
+          "responseFormat": "=text",
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        528,
+        -32
+      ],
+      "id": "9d16d2df-87f8-421a-a003-3997b9c85faf",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "XgMsSEgQqXl80ISt",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1gwNf3xaT5KUrTarpEeDDd2ykcyCkIYEABmiWIpWikFA",
+          "mode": "list",
+          "cachedResultName": "preguntas y respuestas frecuentes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gwNf3xaT5KUrTarpEeDDd2ykcyCkIYEABmiWIpWikFA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gwNf3xaT5KUrTarpEeDDd2ykcyCkIYEABmiWIpWikFA/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        848,
+        -16
+      ],
+      "id": "7b2fd108-dbd9-403b-9d1c-ab6c50a5e04c",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wic6jSeCdkSh3m8Y",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.chatInput }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Preguntas y respuestas",
+              "description": "todo lo relacionado con consultas comerciales. Ejemplo: horarios, servicios, llamsdas, etc."
+            },
+            {
+              "category": "leads",
+              "description": "todo lo relacionado con la posibilidad de captar los datos de un potencial cliente de nuestro servicio tecnico.Por ejemplo: Quiero una reparacion de computadora, quiero solicitar sus servicios.Correo electronico enviar para contacto,cuerpo,asuntos,etc."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        64
+      ],
+      "id": "73c9ccfe-820b-4a9f-a3f4-7a063f958806",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "Eres un asistente para un negocio de reparación de computadoras.\n\nTu función es ayudar a clientes potenciales a solicitar servicios mediante correo electrónico.\n\nANTES de usar la herramienta Gmail, debes recopilar obligatoriamente:\n\n- nombre\n- correo electrónico\n- asunto\n- descripción del problema o solicitud\n\nNUNCA uses Gmail si falta algún dato.\n\nDebes pedir los datos faltantes uno por uno de manera natural.\n\nSOLO cuando tengas TODOS los datos:\n- nombre\n- correo\n- asunto\n- mensaje\n\npuedes utilizar la herramienta Gmail.\n\nDespués de enviar el correo, confirma al usuario que la solicitud fue enviada correctamente.\n\nSiempre responde usando únicamente el campo \"response\".\n\nNunca uses JSON visible.\nNunca uses etiquetas.\nNunca expliques procesos internos."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        176
+      ],
+      "id": "5475ab8d-ad3f-47d7-b81e-8eed2755f916",
+      "name": "chatbotweb1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        96,
+        352
+      ],
+      "id": "01ae25c6-9e1a-455f-ab49-219e5c4738aa",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "Wr34brOL2DDG0ink",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        480,
+        416
+      ],
+      "id": "3f6adcb3-3891-4dd1-8e45-d732c94e2f6c",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `Correo electrónico proporcionado por el usuario.`, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `Asunto del correo proporcionado por el usuario.`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Mensaje completo o descripción del problema proporcionado por el usuario.`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        304
+      ],
+      "id": "1a1baa4c-90eb-4928-b75c-d53295c0627b",
+      "name": "Send a message in Gmail",
+      "webhookId": "e1bb7729-c500-4970-a05d-2778b9190ecd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gX8gAmMEknbgSoil",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6073d8d7-6ea4-40aa-9dfd-019e442ceed4",
+              "leftValue": "={{ $json.conversation_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        112
+      ],
+      "id": "babfb17d-d5ea-4110-a6e6-6ae60cc7948c",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30db65b1-4385-48c6-bd5b-0f754aa129c1",
+              "name": "conversation_type",
+              "value": "lead",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        144
+      ],
+      "id": "9d24415d-f002-401f-9119-7616307b0028",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30db65b1-4385-48c6-bd5b-0f754aa129c1",
+              "name": "conversation_type",
+              "value": "faq",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -128
+      ],
+      "id": "0207aa8f-2915-489e-84a1-b10e4c9a5bb2",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "chatbotweb",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chatbotweb": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "chatbotweb",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "chatbotweb",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "chatbotweb1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "chatbotweb1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "chatbotweb1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "chatbotweb1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "chatbotweb1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "chatbotweb",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3f14997a-3e07-4622-bdf6-85d2af19f23a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d0e3d566a4ba4494b30513925a6a02404d437aadc54283ec5272f770da7d7d5d"
+  },
+  "id": "moIU0NGRPITcWUFc",
+  "tags": []
+}
