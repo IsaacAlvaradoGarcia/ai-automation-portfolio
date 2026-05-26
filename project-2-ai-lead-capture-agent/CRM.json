@@ -1,0 +1,302 @@
+{
+  "name": "CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Contacta con nosotros",
+        "formDescription": "Dinos cual es el problema y lo resolveremos de inmediato",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Cual es tu nombre?",
+              "placeholder": "Agustin"
+            },
+            {
+              "fieldLabel": "Apellido",
+              "placeholder": "Medina",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "correo",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "presupuesto para su proyecto",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "2000-3000"
+                  },
+                  {
+                    "option": "3000-4000"
+                  },
+                  {
+                    "option": "4000-5000"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "que tanta automatizacion",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": true,
+          "buttonLabel": "Submit"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "aa84bd7f-1b03-440d-99bf-42c40b5331a3",
+      "name": "On form submission",
+      "webhookId": "76b91a96-a207-4a66-b63c-1bd8d9d58104"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Actuaras como un redactor profesional de correos para mi propia empresa necesito que seas cortes , muy profesional y que solo respondas con el correo redactado ninguna instruccion o texto extra ",
+              "role": "model"
+            },
+            {
+              "content": "=Redacta un correo muy profesional que tenga un tono cordial y muy persuasivo de acerca por que somo la mejopr opcion y que4 etsamos interesados en ser muy flexibles para su conformidad, la intencion de este correo es agendar una cita la cual empezara el trato y negociacion con este cliente \n\nQuiero que elimines el asunto y solo conserves el mensaje para el cliente asi mismo la signature de tu mensajaae solo el correo originalk para comunicacion con el cliente \n\nRespeta la estructural del url de la agenda en el enlance y manten siempre la misma URL\n\nLos datos de entrada son los siguientes: \n\nnombre :{{ $json['Cual es tu nombre?'] }}\napellido:{{ $json.Apellido }}\nnecesidad: {{ $json['que tanta automatizacion'] }}\n-------------------------------------------------------\nEjemplo de correo electronico usalo como referencia pero no como guia absoluta\n\nHola (nombre)\nme complace que deposites tu confianza en Servicio Tecnico Alvarado.\"Texto personalizado persuasivo sobre (necesidad)\"\n\nAgenda en el siguiente enlace : https://cal.com/miguel-isaac-alvarado-garcia-vkzcph/30min?overlayCalendar=true\n\nSaludos, \n\nIsaac Alvarado, Ceo SerVerTec\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "733cf284-d650-41cb-9a00-982539387262",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "POipEVrpyvFBBBMI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.correo }}",
+        "subject": "Propuesta de Negocio",
+        "emailType": "text",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "8a27f206-5aea-4013-a8ca-4154f6dd832a",
+      "name": "Send a message",
+      "webhookId": "3a4f4659-af51-45ea-851a-c2ef501638c2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gX8gAmMEknbgSoil",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Cal-booking",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -192
+      ],
+      "id": "c830a57d-531d-42a1-a292-38a15ca8783e",
+      "name": "Webhook",
+      "webhookId": "0337fe8a-1d74-40be-aec1-3ccbb5de02d1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.payload.attendees[0].email }}",
+        "subject": "Confirmacion de Reunion ",
+        "emailType": "text",
+        "message": "=Hola {{ $json.body.payload.attendees[0].name }},\n\nTu reservación ha sido confirmada correctamente ✅\n\n📅 Fecha:\n{{ new Date($json.body.payload.startTime).toLocaleString('es-MX', { dateStyle: 'full', timeStyle: 'short' }) }}\n\n📍 Zona horaria:\n{{ $json.body.payload.attendees[0].timeZone }}\n\n🎥 Link de la reunión:\n{{ $json.body.payload.metadata.videoCallUrl }}\n\nEn breve recibirás más información sobre la sesión.\n\nGracias por agendar.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -208
+      ],
+      "id": "b67f3059-4853-43f1-a5eb-4c7d55c0635b",
+      "name": "Send a message1",
+      "webhookId": "96ea3f94-d4d5-4b9d-894e-5658edf28328",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gX8gAmMEknbgSoil",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1PQNE99wCyOiXQRYieB2sfQaN1Ix6L7utFbaaEtsfy1U",
+          "mode": "list",
+          "cachedResultName": "LEADS_ESTADOS_CRM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1PQNE99wCyOiXQRYieB2sfQaN1Ix6L7utFbaaEtsfy1U/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre": "={{ $('Webhook').item.json.body.payload.attendees[0].name }}",
+            "Correo Electronico": "={{ $('Webhook').item.json.body.payload.attendees[0].email }}",
+            "Fase": "Agendado"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fase",
+              "displayName": "Fase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Correo Electronico",
+              "displayName": "Correo Electronico",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        -208
+      ],
+      "id": "2b35052c-452c-42df-9c67-8c47d98e8185",
+      "name": "CRM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wic6jSeCdkSh3m8Y",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "197ab116-c37d-4246-9c59-e6f0f4de2be5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d0e3d566a4ba4494b30513925a6a02404d437aadc54283ec5272f770da7d7d5d"
+  },
+  "id": "nvLFNz5mwXXcZWDw",
+  "tags": [
+    {
+      "updatedAt": "2026-05-21T14:15:16.102Z",
+      "createdAt": "2026-05-21T14:15:16.102Z",
+      "id": "1XRDanoYbI8uVTW5",
+      "name": "CRM"
+    }
+  ]
+}
