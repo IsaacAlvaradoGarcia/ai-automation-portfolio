@@ -27,3 +27,6 @@ The workflow includes:
 * routing logic
 * conversational memory
 * FAQ retrieval system
+## Workflow Screenshot
+
+![Workflow](image.png)
