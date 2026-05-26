@@ -89,3 +89,6 @@ This project was built while learning:
 - AI chatbot support
 - database integration
 - customer ticketing system
+## Workflow Screenshot
+
+![Workflow](./screenshots/LEADSANDCRM.png)
