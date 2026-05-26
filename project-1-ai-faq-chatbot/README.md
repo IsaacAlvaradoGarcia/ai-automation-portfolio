@@ -29,4 +29,4 @@ The workflow includes:
 * FAQ retrieval system
 ## Workflow Screenshot
 
-![Workflow](image.png)
+![Workflow](FAQSANDLEADS.png)
